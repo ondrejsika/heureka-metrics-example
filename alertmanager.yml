@@ -1,0 +1,23 @@
+
+global:
+  resolve_timeout: 10s
+  smtp_from: monitoring@heureka.wtf
+  smtp_smarthost: prom.sikademo.com:25
+  smtp_require_tls: false
+
+route:
+  receiver: default
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 10m
+  routes:
+    - receiver: devnull
+      match:
+        severity: dogshit
+
+receivers:
+  - name: devnull
+  - name: default
+    email_configs:
+      - send_resolved: true
+        to: all@heureka.wtf

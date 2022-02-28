@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"fmt"
 	"log"
@@ -19,12 +20,14 @@ var promInfo = prometheus.NewGauge(prometheus.GaugeOpts{
 	},
 })
 
-var counter_requests = prometheus.NewCounter(
+var counter_requests = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
 		Namespace: "example",
 		Name:      "requests_total",
 		Help:      "Total nuber of requests",
-	})
+	},
+	[]string{"status_code"},
+)
 
 func main() {
 	prometheus.MustRegister(counter_requests)
@@ -38,9 +41,10 @@ func main() {
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		statusCode := 200
 		fmt.Println(r.URL.Path)
-		counter_requests.Inc()
-		w.WriteHeader(200)
+		counter_requests.WithLabelValues(strconv.Itoa(statusCode)).Inc()
+		w.WriteHeader(statusCode)
 		w.Write([]byte("OK"))
 	})
 

@@ -23,3 +23,14 @@ groups:
         expr: 100 * sum(example_requests_total{status_code=~"5.."}) / sum(example_requests_total)
       - record: example_requests_duration_200ms_bucket_percentage
         expr: 100 * (1 - example_request_duration_seconds_bucket{le="0.2"} / ignoring(le) example_request_duration_seconds_bucket{le="+Inf"})
+      - alert: sla200
+        expr: example_requests_duration_200ms_bucket_percentage > 15
+        for: 30s
+        labels:
+          severity: medium
+        annotations:
+          summary: "Prometheus job {{ $labels.job }} with {{ $labels.instance }} instance is down"
+          description: "Job {{ $labels.job }} with {{ $labels.instance }} instance has been down for more than 20 seconds."
+      - alert: sla200avg
+        expr: avg(example_requests_duration_200ms_bucket_percentage) by (status_code) > 15
+        for: 30s

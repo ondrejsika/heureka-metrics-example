@@ -7,3 +7,5 @@ groups:
         expr: 100 * sum(example_requests_total{status_code=~"404|418"}) / sum(example_requests_total)
       - record: example_requests_percentage_500
         expr: 100 * sum(example_requests_total{status_code=~"5.."}) / sum(example_requests_total)
+      - record: example_requests_duration_200ms_bucket_percentage
+        expr: 100 * (1 - example_request_duration_seconds_bucket{le="0.2"} / ignoring(le) example_request_duration_seconds_bucket{le="+Inf"})

@@ -10,6 +10,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+var promInfo = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "example_info",
+	Help: "Instance info",
+	ConstLabels: prometheus.Labels{
+		"version": "0.1.0-dev",
+		"branch":  "master",
+	},
+})
+
 var counter_requests = prometheus.NewCounter(
 	prometheus.CounterOpts{
 		Namespace: "example",
@@ -19,6 +28,8 @@ var counter_requests = prometheus.NewCounter(
 
 func main() {
 	prometheus.MustRegister(counter_requests)
+	prometheus.MustRegister(promInfo)
+	promInfo.Set(1)
 
 	http.Handle("/metrics", promhttp.Handler())
 

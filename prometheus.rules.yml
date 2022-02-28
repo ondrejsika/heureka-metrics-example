@@ -1,0 +1,9 @@
+groups:
+  - name: example
+    rules:
+      - record: example_requests_percentage_200
+        expr: 100 * sum(example_requests_total{status_code="200"}) / sum(example_requests_total)
+      - record: example_requests_percentage_400
+        expr: 100 * sum(example_requests_total{status_code=~"404|418"}) / sum(example_requests_total)
+      - record: example_requests_percentage_500
+        expr: 100 * sum(example_requests_total{status_code=~"5.."}) / sum(example_requests_total)

@@ -1,4 +1,18 @@
 groups:
+  - name: general
+    rules:
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: dogshit
+      - alert: Up
+        expr: up == 0
+        for: 20s
+        labels:
+          severity: high
+        annotations:
+          summary:
+            Prometheus job "{{ $labels.job }}" with "{{ $labels.instance }}" instance is down
   - name: example
     rules:
       - record: example_requests_percentage_200

@@ -94,6 +94,9 @@ func main() {
 		started := time.Now()
 		randomSleep()
 		statusCode := getStatusCode()
+		if r.URL.Path == "/slow" && statusCode == 200 {
+			time.Sleep(1000 * time.Millisecond)
+		}
 		fmt.Println(r.Method, statusCode, r.URL.Path)
 		counter_requests.WithLabelValues(
 			strconv.Itoa(statusCode),

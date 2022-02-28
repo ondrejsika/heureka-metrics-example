@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 
 	"fmt"
 	"log"
@@ -30,6 +31,16 @@ var counter_requests = prometheus.NewCounterVec(
 	[]string{"status_code", "path", "method"},
 )
 
+var request_duration = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Namespace: "example",
+		Name:      "request_duration_seconds",
+		Help:      "Request duration in seconds",
+		Buckets:   []float64{.01, .05, .1, .2, .5, 1, 2, 5},
+	},
+	[]string{"status_code", "path", "method"},
+)
+
 func getStatusCode() int {
 	r := rand.Intn(100)
 	if r < 50 {
@@ -44,9 +55,27 @@ func getStatusCode() int {
 	return 500
 }
 
+func randomSleep() {
+	r := rand.Intn(100)
+	if r < 50 {
+		time.Sleep(50 * time.Millisecond)
+		return
+	}
+	if r < 90 {
+		time.Sleep(150 * time.Millisecond)
+		return
+	}
+	if r < 99 {
+		time.Sleep(250 * time.Millisecond)
+		return
+	}
+	time.Sleep(3000 * time.Millisecond)
+}
+
 func main() {
 	prometheus.MustRegister(counter_requests)
 	prometheus.MustRegister(promInfo)
+	prometheus.MustRegister(request_duration)
 	promInfo.Set(1)
 
 	http.Handle("/metrics", promhttp.Handler())
@@ -62,6 +91,8 @@ func main() {
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		started := time.Now()
+		randomSleep()
 		statusCode := getStatusCode()
 		fmt.Println(r.Method, statusCode, r.URL.Path)
 		counter_requests.WithLabelValues(
@@ -71,6 +102,11 @@ func main() {
 		).Inc()
 		w.WriteHeader(statusCode)
 		w.Write([]byte("OK"))
+		request_duration.WithLabelValues(
+			strconv.Itoa(statusCode),
+			r.URL.Path,
+			r.Method,
+		).Observe(time.Since(started).Seconds())
 	})
 
 	fmt.Println("Server started.")

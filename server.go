@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"net/http"
 	"strconv"
 
@@ -29,6 +30,20 @@ var counter_requests = prometheus.NewCounterVec(
 	[]string{"status_code"},
 )
 
+func getStatusCode() int {
+	r := rand.Intn(100)
+	if r < 50 {
+		return 200
+	}
+	if r < 80 {
+		return 404
+	}
+	if r < 95 {
+		return 418
+	}
+	return 500
+}
+
 func main() {
 	prometheus.MustRegister(counter_requests)
 	prometheus.MustRegister(promInfo)
@@ -41,8 +56,8 @@ func main() {
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		statusCode := 200
-		fmt.Println(r.URL.Path)
+		statusCode := getStatusCode()
+		fmt.Println(statusCode, r.URL.Path)
 		counter_requests.WithLabelValues(strconv.Itoa(statusCode)).Inc()
 		w.WriteHeader(statusCode)
 		w.Write([]byte("OK"))

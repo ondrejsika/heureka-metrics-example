@@ -27,7 +27,7 @@ var counter_requests = prometheus.NewCounterVec(
 		Name:      "requests_total",
 		Help:      "Total nuber of requests",
 	},
-	[]string{"status_code"},
+	[]string{"status_code", "path", "method"},
 )
 
 func getStatusCode() int {
@@ -52,13 +52,23 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(404, r.URL.Path)
+		counter_requests.WithLabelValues(
+			"404",
+			r.URL.Path,
+			r.Method,
+		).Inc()
 		w.WriteHeader(404)
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		statusCode := getStatusCode()
-		fmt.Println(statusCode, r.URL.Path)
-		counter_requests.WithLabelValues(strconv.Itoa(statusCode)).Inc()
+		fmt.Println(r.Method, statusCode, r.URL.Path)
+		counter_requests.WithLabelValues(
+			strconv.Itoa(statusCode),
+			r.URL.Path,
+			r.Method,
+		).Inc()
 		w.WriteHeader(statusCode)
 		w.Write([]byte("OK"))
 	})
